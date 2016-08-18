@@ -1,4 +1,4 @@
-# MNIST recognition implementation with Keras
+# CIFAR10 recognition implementation with Keras
 # Convolutional NN
 # ----------------------------------------------------
 
