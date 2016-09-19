@@ -87,8 +87,8 @@ BATCH_SIZE = 32
 
 GAMMA = 0.99
 
-MAX_EPSILON = 0.0
-MIN_EPSILON = 0.0
+MAX_EPSILON = 0.8
+MIN_EPSILON = 0.1
 LAMBDA = 0.005      # speed of decay
 
 UPDATE_TARGET_FREQUENCY = 10000
@@ -237,8 +237,8 @@ actionCnt = 2 #env.env.action_space.n
 
 agent = Agent(stateCnt, actionCnt)
 
-# try:
-while True:
-    env.run(agent)
-# finally:
-#     agent.brain.model.save("mc.h5")
+try:
+    while True:
+        env.run(agent)
+finally:
+    agent.brain.model.save("mc.h5")
