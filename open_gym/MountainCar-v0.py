@@ -89,7 +89,7 @@ GAMMA = 0.99
 
 MAX_EPSILON = 0.8
 MIN_EPSILON = 0.1
-LAMBDA = 0.005      # speed of decay
+LAMBDA = 0.001      # speed of decay
 
 UPDATE_TARGET_FREQUENCY = 10000
 
@@ -134,16 +134,15 @@ class Agent:
             sys.stdout.flush()
 
         if self.steps % 50000 == 0:
-            utils.displayBrain(self.brain, res=100)
+            utils.displayBrain(self.brain, res=50)
             utils.printFPS(self.steps)
 
         #~~~~~~ debug
 
-
-        # slowly decrease Epsilon based on our eperience
         if self.steps % UPDATE_TARGET_FREQUENCY == 0:
             self.brain.updateTargetModel()
 
+        # slowly decrease Epsilon based on our eperience
         self.steps += 1
         self.epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * self.steps)
 
