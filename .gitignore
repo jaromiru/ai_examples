@@ -1,2 +1,4 @@
+.DS_Store
 MNIST_data/
 *.h5
+_*
