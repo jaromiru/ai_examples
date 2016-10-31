@@ -32,7 +32,7 @@ class Brain:
         self.model = self._createModel()
         self.model_ = self._createModel()  # target network
 
-        self.model.load_weights("mc.h5")
+        # self.model.load_weights("mc.h5")
 
     def _createModel(self):
         model = Sequential()
@@ -170,7 +170,9 @@ class Agent:
         states_ = numpy.array([ ([0,0] if o[1][3] is None else o[1][3]) for o in batch ])
 
         p = agent.brain.predict(states)
-        p_ = agent.brain.predict(states_, target=True)
+
+        p_ = agent.brain.predict(states_, target=False)
+        pTarget_ = agent.brain.predict(states_, target=True)
 
         x = numpy.zeros((batchLen, self.stateCnt))
         y = numpy.zeros((batchLen, self.actionCnt))
@@ -185,7 +187,7 @@ class Agent:
                 t[a] = r
             else:
                 # t[a] = r + GAMMA * numpy.amax(p_[i])          # single DQN
-                t[a] = r + GAMMA * p_[i][ numpy.argmax(p[i]) ]  # double DQN
+                t[a] = r + GAMMA * pTarget_[i][ numpy.argmax(p_[i]) ]  # double DQN
 
             idx = batch[i][0]
             error = abs(oldVal - t[a])
