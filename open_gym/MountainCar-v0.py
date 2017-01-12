@@ -1,5 +1,5 @@
 # OpenGym MountainCar-v0
-# with Double DQN
+#
 #
 # actions reduced to only left & right
 #
@@ -32,13 +32,13 @@ class Brain:
         self.model = self._createModel()
         self.model_ = self._createModel()  # target network
 
-        self.model.load_weights("mc.h5")
+        # self.model.load_weights("mc.h5")
 
     def _createModel(self):
         model = Sequential()
 
-        model.add(Dense(output_dim=256, activation='relu', input_dim=stateCnt))
-        model.add(Dense(output_dim=256, activation='relu'))
+        model.add(Dense(output_dim=128, activation='relu', input_dim=stateCnt))
+        model.add(Dense(output_dim=128, activation='relu'))
 
         model.add(Dense(output_dim=actionCnt, activation='linear'))
 
@@ -115,9 +115,8 @@ class Agent:
 
     def replay(self):
         ##----- debug
-        if self.steps % 500 == 0:
+        if self.steps % 1000 == 0:
             P = [
-                [ 0.8528,  0.5515],
                 [ 0.874334,  0.703311], # s__ -> exit
                 [ 0.819632,  0.69813 ], # s_ -> s__
                 [ 0.765333,  0.697897], # s -> s_
@@ -128,7 +127,7 @@ class Agent:
             pred = self.brain.predict( numpy.array(P) )
 
             for o in pred:
-                sys.stdout.write(str(o[1])+" ")
+                sys.stdout.write(str(o[0]) + " " + str(o[1])+" ")
 
             print(";")
             sys.stdout.flush()
@@ -166,8 +165,7 @@ class Agent:
             if s_ is None:
                 t[a] = r
             else:
-                # t[a] = r + GAMMA * numpy.amax(p_[i])          # single DQN
-                t[a] = r + GAMMA * p_[i][ numpy.argmax(p[i]) ]  # double DQN
+                t[a] = r + GAMMA * numpy.amax(p_[i])
 
             x[i] = s
             y[i] = t            
@@ -192,10 +190,9 @@ class Environment:
     def run(self, agent):
         s = self.normalize(self.env.reset())
         R = 0 
-        step = 0
 
         while True:            
-            self.env.render()
+            # self.env.render()
 
             a = agent.act(s)
 
@@ -216,8 +213,6 @@ class Environment:
             R += r
 
             agent.replay()            
-
-            step += 1
 
             if done:
                 break
