@@ -76,7 +76,7 @@ class Brain:
 		loss = tf.reduce_sum(loss_total)
 
 		optimizer = tf.train.AdamOptimizer()
-		minimize = optimizer.minimize(loss_total)
+		minimize = optimizer.minimize(loss)
 
 		return s_t, a_t, r_t, minimize
 
