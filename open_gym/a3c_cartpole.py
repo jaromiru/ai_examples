@@ -29,6 +29,9 @@ GAMMA_N = GAMMA ** N_STEP_RETURN
 NUM_ACTIONS = 2
 NUM_STATE = 4
 
+MIN_BATCH = 64
+LEARNING_RATE = 2e-2
+
 #---------
 NONE_STATE = np.zeros(NUM_STATE)
 
@@ -65,23 +68,23 @@ class Brain:
 		
 		p, v = model(s_t)
 
-		log_prob = tf.log( tf.reduce_sum(p * a_t, axis=1, keep_dims=True) )
+		log_prob = tf.log( tf.reduce_sum(p * a_t, axis=1, keep_dims=True) + 1e-10)
 		advantage = r_t - v
 
-		loss_policy = - log_prob * tf.stop_gradient(advantage)			# maximize policy
-		loss_value  = tf.square(advantage)								# minimize value error
-		entropy = tf.reduce_sum(p * tf.log(p), axis=1, keep_dims=True)	# maximize entropy (regularization)
+		loss_policy = - log_prob * tf.stop_gradient(advantage)					# maximize policy
+		loss_value  = tf.square(advantage)										# minimize value error
+		entropy = tf.reduce_sum(p * tf.log(p + 1e-10), axis=1, keep_dims=True)	# maximize entropy (regularization)
 
-		loss_total = loss_policy + loss_value + ENTROPY * entropy
-		loss = tf.reduce_sum(loss_total)
+		loss_total = tf.reduce_mean(loss_policy + loss_value + ENTROPY * entropy)
+		# TODO : try 0.5 * loss_value
 
-		optimizer = tf.train.AdamOptimizer()
-		minimize = optimizer.minimize(loss)
+		optimizer = tf.train.RMSPropOptimizer(LEARNING_RATE, decay=.99)
+		minimize = optimizer.minimize(loss_total)
 
 		return s_t, a_t, r_t, minimize
 
 	def _optimize(self):
-		if not self.train_queue[0]:	#if empty..
+		if len(self.train_queue[0]) < MIN_BATCH:
 			time.sleep(0)	# yield
 			return
 
@@ -105,7 +108,7 @@ class Brain:
 		v = self.predict_v(s_)
 		r_ = r + GAMMA_N * v * s_mask	# set v to 0 where s_ is terminal state
 
-		print("Minimizing batch of %d" % len(s))
+		if len(s) > 2*MIN_BATCH: print("Optimizer alert! Minimizing batch of %d" % len(s))
 		s_t, a_t, r_t, minimize = self.graph
 		self.session.run(minimize, feed_dict={s_t: s, a_t: a, r_t: r_})
 
@@ -201,6 +204,7 @@ class Environment(threading.Thread):
 	def runEpisode(self):
 		s = self.env.reset()
 
+		R = 0
 		while True:         
 			if self.render: self.env.render()
 
@@ -213,8 +217,12 @@ class Environment(threading.Thread):
 			self.agent.train(s, a, r, s_)
 
 			s = s_
+			R += r
+
 			if done:
 				break
+
+		print("Total R:", R)
 
 	def run(self):
 		while not self.stop_signal:
